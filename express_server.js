@@ -11,8 +11,12 @@ const urlDatabase = {
 
 
 app.get("/", (request, response) => {
-  response.send("Hello!")
-})
+  response.send("Hello!");
+});
+
+app.get("/urls.json", (request, response) => {
+  response.json(urlDatabase);
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
