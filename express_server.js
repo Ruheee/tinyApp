@@ -11,10 +11,17 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+app.get('/urls/:id', (request, response) => {
+    const userInput = request.params.id
+    const templateVars = { id: userInput, longURL: urlDatabase[userInput]  }
+    response.render("urls_show", templateVars);
+  
+});
+
 app.get("/urls", (request, response) => {
   const templateVars = { urls: urlDatabase}
   response.render("urls_index", templateVars);
-})
+});
 
 app.get("/", (request, response) => {
   response.send("Hello!");
@@ -30,4 +37,4 @@ app.get("/hello", (request, response) => {
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
-})
+});
