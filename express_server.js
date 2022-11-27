@@ -1,3 +1,4 @@
+const { request, response } = require('express');
 const express = require('express'); 
 const app = express();
 const PORT = 8080; // default port is 8080
@@ -10,6 +11,10 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+app.get("/urls", (request, response) => {
+  const templateVars = { urls: urlDatabase}
+  response.render("urls_index", templateVars);
+})
 
 app.get("/", (request, response) => {
   response.send("Hello!");
