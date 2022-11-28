@@ -21,12 +21,19 @@ function generateRandomString() {
   return result;
 };
 
+app.get("/u/:id", (req, res) => {
+  const id = req.params.id;// body, params, query 
+  const longURL = urlDatabase[id];
+  console.log(longURL);
+  res.redirect(longURL);
+});
+
 
 
 app.post("/urls", (request, response) => {
   let id = generateRandomString()
   urlDatabase[id] = request.body.longURL;
-  response.redirect('/urls/:id'); 
+  response.redirect(`/urls/${id}`); 
 });
 
 // routes to a page where you can input new urls 
