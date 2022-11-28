@@ -10,6 +10,7 @@ app.use(express.urlencoded({ extended: true }));
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
+  
 };
 
 function generateRandomString() {
@@ -21,12 +22,22 @@ function generateRandomString() {
   return result;
 };
 
-// 
-app.post("/urls/:id/delete", (request, response) => {
-  const userInput = request.params.id
-  delete urlDatabase[userInput];
+app.post("/urls/:shortURL", (request, response) => {
+  const shortURL = request.params.shortURL;
+  console.log(request.body);
+  console.log(shortURL);
+  // leverage irl database variable above 
+  // assign the edited long url to the short url in my param;
+  urlDatabase[shortURL] = request.body.editedLongURL
   response.redirect("/urls")
 })
+
+// 
+app.post("/urls/:id/delete", (request, response) => {
+  const userInput = request.params.id;
+  delete urlDatabase[userInput];
+  response.redirect("/urls");
+});
 
 // takes you to the website assigned to the 6 chatacter key
 app.get("/u/:id", (req, res) => {
