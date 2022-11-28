@@ -13,22 +13,20 @@ const urlDatabase = {
 };
 
 function generateRandomString() {
-  let characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-  let result = ''
-  let length = 6 // Customize the length here.
-  for (let i = length; i > 0; --i) {
+  let characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'//characters that will be used in random generated string
+  let result = '' //empty string
+  for (let i = 0; i < 6; i++) {
     result += characters[Math.round(Math.random() * (characters.length - 1))]
   }
-  console.log(result)
   return result;
-  
 };
 
 
 
-app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+app.post("/urls", (request, response) => {
+  let id = generateRandomString()
+  urlDatabase[id] = request.body.longURL;
+  response.redirect('/urls/:id'); 
 });
 
 // routes to a page where you can input new urls 
@@ -36,12 +34,11 @@ app.get("/urls/new", (request, response) => {
   response.render("urls_new");
 });
 
-// shows a single short URL along with is longURL on a page 
+
 app.get('/urls/:id', (request, response) => {
     const userInput = request.params.id
-    const templateVars = { id: userInput, longURL: urlDatabase[userInput]  }
+    const templateVars = { id: request.params.id, longURL: urlDatabase[userInput]  }
     response.render("urls_show", templateVars);
-  
 });
 
 // renders the urlDatabase on the urls page
