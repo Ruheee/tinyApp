@@ -21,15 +21,21 @@ function generateRandomString() {
   return result;
 };
 
+// 
+app.post("/urls/:id/delete", (request, response) => {
+  const userInput = request.params.id
+  delete urlDatabase[userInput];
+  response.redirect("/urls")
+})
+
+// takes you to the website assigned to the 6 chatacter key
 app.get("/u/:id", (req, res) => {
   const id = req.params.id;// body, params, query 
   const longURL = urlDatabase[id];
-  console.log(longURL);
   res.redirect(longURL);
 });
 
-
-
+//  generates a random 6 character key for new url inputted
 app.post("/urls", (request, response) => {
   let id = generateRandomString()
   urlDatabase[id] = request.body.longURL;
@@ -41,7 +47,7 @@ app.get("/urls/new", (request, response) => {
   response.render("urls_new");
 });
 
-
+// adds the new url inputted to the Urldatabase object
 app.get('/urls/:id', (request, response) => {
     const userInput = request.params.id
     const templateVars = { id: request.params.id, longURL: urlDatabase[userInput]  }
