@@ -25,7 +25,7 @@ function generateRandomString() {
 };
 
 app.get("/register", (request, response) => {
-  const templateVars = { email: "email", password: "password" };
+  const templateVars = { email: "email", password: "password", username: request.cookies["username"] };
   response.render("register", templateVars);
 });
 
