@@ -19,12 +19,17 @@ function generateRandomString() {
   let characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'//characters that will be used in random generated string
   let result = '' //empty string
   for (let i = 0; i < 6; i++) {
-    result += characters[Math.round(Math.random() * (characters.length - 1))]
+    result += characters[Math.round(Math.random() * (characters.length - 1))];
   }
   return result;
 };
 
-//
+app.get("/register", (request, response) => {
+  const templateVars = { email: "email", password: "password" };
+  response.render("register", templateVars);
+});
+
+// add an endpoint to handle a logout
 app.post("/logout", (request, response) => {
   response.clearCookie('username');
   response.redirect("/urls");
