@@ -1,10 +1,12 @@
-const { request, response } = require('express');
+var cookieParser = require('cookie-parser');
+const { response, request } = require('express');
 const express = require('express'); 
 const app = express();
 const PORT = 8080; // default port is 8080
 
 app.set("view engine", "ejs");// tells the express app to use EJS as its templating engine
 app.use(express.urlencoded({ extended: true })); 
+app.use(cookieParser())
 
 
 const urlDatabase = {
@@ -22,15 +24,25 @@ function generateRandomString() {
   return result;
 };
 
+//
+app.post("/logout", (request, response) => {
+  response.clearCookie('username');
+  response.redirect("/urls");
+});
+
+// add an endpoint to handle a post to login
+app.post("/login", (request,response) => {
+  const inputtedUsername = request.body.username;
+  response.cookie('username', inputtedUsername);
+  response.redirect("/urls");
+});
+
+// edit the exist long URL to something different 
 app.post("/urls/:shortURL", (request, response) => {
   const shortURL = request.params.shortURL;
-  console.log(request.body);
-  console.log(shortURL);
-  // leverage irl database variable above 
-  // assign the edited long url to the short url in my param;
-  urlDatabase[shortURL] = request.body.editedLongURL
-  response.redirect("/urls")
-})
+  urlDatabase[shortURL] = request.body.editedLongURL;
+  response.redirect("/urls");
+});
 
 // 
 app.post("/urls/:id/delete", (request, response) => {
@@ -48,6 +60,7 @@ app.get("/u/:id", (req, res) => {
 
 //  generates a random 6 character key for new url inputted
 app.post("/urls", (request, response) => {
+
   let id = generateRandomString()
   urlDatabase[id] = request.body.longURL;
   response.redirect(`/urls/${id}`); 
@@ -55,19 +68,21 @@ app.post("/urls", (request, response) => {
 
 // routes to a page where you can input new urls 
 app.get("/urls/new", (request, response) => {
-  response.render("urls_new");
+  templateVars = { username: request.cookies["username"] }
+  response.render("urls_new", templateVars);
 });
 
 // adds the new url inputted to the Urldatabase object
 app.get('/urls/:id', (request, response) => {
+
     const userInput = request.params.id
-    const templateVars = { id: request.params.id, longURL: urlDatabase[userInput]  }
+    const templateVars = { id: request.params.id, longURL: urlDatabase[userInput], username: request.cookies["username"] }  
     response.render("urls_show", templateVars);
 });
 
 // renders the urlDatabase on the urls page
 app.get("/urls", (request, response) => {
-  const templateVars = { urls: urlDatabase}
+  const templateVars = { urls: urlDatabase, username: request.cookies["username"]}
   response.render("urls_index", templateVars);
 });
 
