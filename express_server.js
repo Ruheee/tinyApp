@@ -15,6 +15,19 @@ const urlDatabase = {
   
 };
 
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
+
 function generateRandomString() {
   let characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'//characters that will be used in random generated string
   let result = '' //empty string
@@ -24,21 +37,56 @@ function generateRandomString() {
   return result;
 };
 
+const getUserByEmail = (email) => {
+  for (const user in users) {
+    if(users[user].email === email) {
+      return users[user];
+    }
+  }
+  return null; 
+};
+
+
+app.get("/login", (request,response) => {
+  const currentUser = users[request.cookies.user_id];
+  const templateVars = { email: "email", password: "password", user: currentUser };
+  response.render("login", templateVars)
+})
+
+// generates random userID and checks to see if email exists and if email / password is an empty string
+app.post("/register", (request, response) => {
+  const generatedId = generateRandomString();
+  const emailCheck = request.body.email;
+  const passCheck = request.body.password;
+  if(emailCheck === "" || passCheck === "") {
+    return response.render(404);
+  }
+  const userEmail = getUserByEmail(emailCheck);
+  if(userEmail) {
+    return response.render(400);
+  } 
+  users[generatedId] = { id: generatedId, email: request.body.email, password: request.body.password};
+  response.cookie('user_id', generatedId);
+  response.redirect("/urls");
+});
+
+// handles the registration form
 app.get("/register", (request, response) => {
-  const templateVars = { email: "email", password: "password", username: request.cookies["username"] };
+  const currentUser = users[request.cookies.user_id];
+  const templateVars = { email: "email", password: "password", user: currentUser };
   response.render("register", templateVars);
 });
 
 // add an endpoint to handle a logout
 app.post("/logout", (request, response) => {
-  response.clearCookie('username');
+  response.clearCookie('user_id');
   response.redirect("/urls");
 });
 
 // add an endpoint to handle a post to login
 app.post("/login", (request,response) => {
   const inputtedUsername = request.body.username;
-  response.cookie('username', inputtedUsername);
+  response.cookie('user_id', inputtedUsername);
   response.redirect("/urls");
 });
 
@@ -49,7 +97,7 @@ app.post("/urls/:shortURL", (request, response) => {
   response.redirect("/urls");
 });
 
-// 
+// deletes a url on main apge
 app.post("/urls/:id/delete", (request, response) => {
   const userInput = request.params.id;
   delete urlDatabase[userInput];
@@ -65,7 +113,6 @@ app.get("/u/:id", (req, res) => {
 
 //  generates a random 6 character key for new url inputted
 app.post("/urls", (request, response) => {
-
   let id = generateRandomString()
   urlDatabase[id] = request.body.longURL;
   response.redirect(`/urls/${id}`); 
@@ -73,21 +120,24 @@ app.post("/urls", (request, response) => {
 
 // routes to a page where you can input new urls 
 app.get("/urls/new", (request, response) => {
-  templateVars = { username: request.cookies["username"] }
+  // need to grab the userObject of the current user thats logged in
+  const currentUser = users[request.cookies.user_id];
+  templateVars = { user: currentUser };
   response.render("urls_new", templateVars);
 });
 
 // adds the new url inputted to the Urldatabase object
 app.get('/urls/:id', (request, response) => {
-
-    const userInput = request.params.id
-    const templateVars = { id: request.params.id, longURL: urlDatabase[userInput], username: request.cookies["username"] }  
-    response.render("urls_show", templateVars);
+  const currentUser = users[request.cookies.user_id];
+  const userInput = request.params.id;
+  const templateVars = { id: request.params.id, longURL: urlDatabase[userInput], user: currentUser }; 
+  response.render("urls_show", templateVars);
 });
 
 // renders the urlDatabase on the urls page
 app.get("/urls", (request, response) => {
-  const templateVars = { urls: urlDatabase, username: request.cookies["username"]}
+  const currentUser = users[request.cookies.user_id];
+  const templateVars = { urls: urlDatabase, user: currentUser}
   response.render("urls_index", templateVars);
 });
 
