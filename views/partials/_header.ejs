@@ -17,17 +17,21 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
+      
     </div>
-      <% if(username === undefined) { %> 
-        <form action="/login" method="POST"> 
-          <button type="submit">Sign in</button>
-          <input type="text" name="username">
-        </form>
-      <% } else{ %>  
-        <%= username %>
-        <form action="/logout" method="POST">
-          <button type="submit">Sign out</button>
-        </form>
-      <% } %>
+    
+    <% if(user === undefined) { %> 
+      <form action="/register" method="GET">
+        <button>Register</button>
+      </form>
+      <form action="login" method="GET">
+        <button>Log in</button>
+      </form>
+    <% } else{ %>  
+      <%= user.email %>
+      <form action="/logout" method="POST">
+        <button type="submit">Sign out</button>
+      </form>
+    <% } %>
   </nav>
 </header>
