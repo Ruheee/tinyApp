@@ -51,18 +51,18 @@ app.get("/login", (request,response) => {
   const currentUser = users[request.cookies.user_id];
   const templateVars = { email: "email", password: "password", user: currentUser };
   response.render("login", templateVars)
-})
+});
 
 // generates random userID and checks to see if email exists and if email / password is an empty string
 app.post("/register", (request, response) => {
   const generatedId = generateRandomString();
   const emailCheck = request.body.email;
   const passCheck = request.body.password;
-  if(emailCheck === "" || passCheck === "") {
+  if (emailCheck === "" || passCheck === "") {
     return response.render(404);
   }
   const userEmail = getUserByEmail(emailCheck);
-  if(userEmail) {
+  if (userEmail) {
     return response.render(400);
   } 
   users[generatedId] = { id: generatedId, email: request.body.email, password: request.body.password};
@@ -85,8 +85,9 @@ app.post("/logout", (request, response) => {
 
 // add an endpoint to handle a post to login
 app.post("/login", (request,response) => {
+  const randomID = generateRandomString()
   const inputtedUsername = request.body.username;
-  response.cookie('user_id', inputtedUsername);
+  response.cookie('user_id', randomID);
   response.redirect("/urls");
 });
 
