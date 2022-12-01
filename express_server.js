@@ -77,7 +77,7 @@ app.get("/register", (request, response) => {
 app.post("/logout", (request, response) => {
   response.clearCookie('user_id');
   response.redirect("/login");
-});
+})
 
 // handles the login ejs page
 app.get("/login", (request,response) => {
@@ -131,7 +131,6 @@ app.post("/urls", (request, response) => {
 
 // routes to a page where you can input new urls 
 app.get("/urls/new", (request, response) => {
-  // need to grab the userObject of the current user thats logged in
   const currentUser = users[request.cookies.user_id];
   templateVars = { user: currentUser };
   response.render("urls_new", templateVars);
