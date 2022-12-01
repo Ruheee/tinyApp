@@ -47,11 +47,7 @@ const getUserByEmail = (email) => {
 };
 
 
-app.get("/login", (request,response) => {
-  const currentUser = users[request.cookies.user_id];
-  const templateVars = { email: "email", password: "password", user: currentUser };
-  response.render("login", templateVars)
-});
+
 
 // generates random userID and checks to see if email exists and if email / password is an empty string
 app.post("/register", (request, response) => {
@@ -59,11 +55,11 @@ app.post("/register", (request, response) => {
   const emailCheck = request.body.email;
   const passCheck = request.body.password;
   if (emailCheck === "" || passCheck === "") {
-    return response.render(404);
+    return response.status(404).send("Error: 404");
   }
   const userEmail = getUserByEmail(emailCheck);
   if (userEmail) {
-    return response.render(400);
+    return response.status(400).send("Error: 400");
   } 
   users[generatedId] = { id: generatedId, email: request.body.email, password: request.body.password};
   response.cookie('user_id', generatedId);
@@ -80,14 +76,28 @@ app.get("/register", (request, response) => {
 // add an endpoint to handle a logout
 app.post("/logout", (request, response) => {
   response.clearCookie('user_id');
-  response.redirect("/urls");
+  response.redirect("/login");
+});
+
+// handles the login ejs page
+app.get("/login", (request,response) => {
+  const currentUser = users[request.cookies.user_id];
+  const templateVars = { email: "email", password: "password", user: currentUser };
+  response.render("login", templateVars);
 });
 
 // add an endpoint to handle a post to login
 app.post("/login", (request,response) => {
-  const randomID = generateRandomString()
-  const inputtedUsername = request.body.username;
-  response.cookie('user_id', randomID);
+  const email = request.body.email;
+  const password = request.body.password;
+  const user = getUserByEmail(email);
+  if (!user) {
+    return response.status(403).send("Error: 403");
+  };
+  if (password !== user.password) {
+    return response.status(403).send("Error: 403");
+  };
+  response.cookie('user_id', user.id);
   response.redirect("/urls");
 });
 
