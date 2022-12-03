@@ -1,5 +1,4 @@
-var cookieParser = require('cookie-parser');
-const { response, request } = require('express');
+const cookieParser = require('cookie-parser');
 const express = require('express'); 
 const app = express();
 const PORT = 8080; // default port is 8080
@@ -9,11 +8,24 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser())
 
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
   
+// };
+
+
+const urlDatabase = {
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
+
 
 const users = {
   userRandomID: {
@@ -29,8 +41,8 @@ const users = {
 };
 
 function generateRandomString() {
-  let characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'//characters that will be used in random generated string
-  let result = '' //empty string
+  let characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let result = '';
   for (let i = 0; i < 6; i++) {
     result += characters[Math.round(Math.random() * (characters.length - 1))];
   }
@@ -46,7 +58,15 @@ const getUserByEmail = (email) => {
   return null; 
 };
 
-
+const urlsForUser = (cookieID) => {
+  const obj1 = {};
+  for (const userID in urlDatabase) {
+    if (urlDatabase[userID].userID === cookieID) {
+      obj1[userID] = urlDatabase[userID];
+    }
+  }
+  return obj1;
+};
 
 
 // generates random userID and checks to see if email exists and if email / password is an empty string
@@ -70,6 +90,9 @@ app.post("/register", (request, response) => {
 app.get("/register", (request, response) => {
   const currentUser = users[request.cookies.user_id];
   const templateVars = { email: "email", password: "password", user: currentUser };
+  if (currentUser) {
+    response.redirect("/urls");
+  }
   response.render("register", templateVars);
 });
 
@@ -77,12 +100,15 @@ app.get("/register", (request, response) => {
 app.post("/logout", (request, response) => {
   response.clearCookie('user_id');
   response.redirect("/login");
-})
+});
 
 // handles the login ejs page
 app.get("/login", (request,response) => {
   const currentUser = users[request.cookies.user_id];
   const templateVars = { email: "email", password: "password", user: currentUser };
+  if (currentUser) {
+    response.redirect("/urls");
+  }
   response.render("login", templateVars);
 });
 
@@ -104,28 +130,50 @@ app.post("/login", (request,response) => {
 // edit the exist long URL to something different 
 app.post("/urls/:shortURL", (request, response) => {
   const shortURL = request.params.shortURL;
-  urlDatabase[shortURL] = request.body.editedLongURL;
+  const userCookie = request.cookies['user_id'];
+  const urlUserID = urlDatabase[request.params.shortURL].userID;
+  if (userCookie === urlUserID) {
+    urlDatabase[shortURL] = { longURL: request.body.longURL , userID: request.cookies.user_id };
+  } else {
+    response.status(404).send("Need to be logged in order to delete")
+  }
+  
   response.redirect("/urls");
 });
 
 // deletes a url on main apge
 app.post("/urls/:id/delete", (request, response) => {
   const userInput = request.params.id;
-  delete urlDatabase[userInput];
+  const userCookie = request.cookies['user_id'];
+  const urlUserID = urlDatabase[request.params.id].userID;
+  if (userCookie === urlUserID) {
+    delete urlDatabase[userInput]
+  } else {
+    response.status(404).send("Need to be logged in order to delete")
+  }
   response.redirect("/urls");
 });
 
 // takes you to the website assigned to the 6 chatacter key
 app.get("/u/:id", (req, res) => {
-  const id = req.params.id;// body, params, query 
-  const longURL = urlDatabase[id];
+  const id = req.params.id;
+  const longURL = urlDatabase[id].longURL;
+  if (!urlDatabase[id]) {
+    res.send(`Error 404: ${id} not found`)
+  }
+  
+  
   res.redirect(longURL);
 });
 
 //  generates a random 6 character key for new url inputted
 app.post("/urls", (request, response) => {
   let id = generateRandomString()
-  urlDatabase[id] = request.body.longURL;
+  urlDatabase[id] = { longURL: request.body.longURL, userID: request.cookies.user_id };
+  const currentUser = users[request.cookies.user_id];
+  if (!currentUser) {
+    response.send('You need to be registered and/or logged in for you to have access to shortening urls');
+  };
   response.redirect(`/urls/${id}`); 
 });
 
@@ -133,6 +181,9 @@ app.post("/urls", (request, response) => {
 app.get("/urls/new", (request, response) => {
   const currentUser = users[request.cookies.user_id];
   templateVars = { user: currentUser };
+  if (!currentUser) {
+    response.redirect('/login')
+  }
   response.render("urls_new", templateVars);
 });
 
@@ -140,15 +191,25 @@ app.get("/urls/new", (request, response) => {
 app.get('/urls/:id', (request, response) => {
   const currentUser = users[request.cookies.user_id];
   const userInput = request.params.id;
-  const templateVars = { id: request.params.id, longURL: urlDatabase[userInput], user: currentUser }; 
+  const templateVars = { id: request.params.id, longURL: urlDatabase[userInput].longURL, user: currentUser }; 
+  const userCookie = request.cookies['user_id'];
+  const urlUserID = urlDatabase[request.params.id].userID;
+  if (!urlDatabase[userInput] || userCookie !== urlUserID) {
+    response.send(`Error 404: ${userInput} not found`);
+  };
   response.render("urls_show", templateVars);
 });
 
 // renders the urlDatabase on the urls page
 app.get("/urls", (request, response) => {
   const currentUser = users[request.cookies.user_id];
-  const templateVars = { urls: urlDatabase, user: currentUser}
-  response.render("urls_index", templateVars);
+  const userID = request.cookies.user_id;
+  const userIDChecker = urlsForUser(userID);
+  const templateVars = { urls: userIDChecker, user: currentUser };
+  if (!currentUser) {
+    response.send('You need to be registered and/or logged in for you to have access to shortening urls');
+  };
+  response.render("urls_index", templateVars );
 });
 
 app.get("/", (request, response) => {
