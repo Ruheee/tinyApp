@@ -98,7 +98,6 @@ app.post("/register", (request, response) => {
   } 
   users[generatedId] = { id: generatedId, email: request.body.email, password: hashedPass};
   request.session.user_id = generatedId
-  // response.cookie('user_id', generatedId);
   response.redirect("/urls");
 });
 
