@@ -1,6 +1,8 @@
 const cookieParser = require('cookie-parser');
 const express = require('express'); 
+const bcrypt = require("bcryptjs");
 const app = express();
+
 const PORT = 8080; // default port is 8080
 
 app.set("view engine", "ejs");// tells the express app to use EJS as its templating engine
@@ -74,6 +76,7 @@ app.post("/register", (request, response) => {
   const generatedId = generateRandomString();
   const emailCheck = request.body.email;
   const passCheck = request.body.password;
+  const hashedPass = bcrypt.hashSync(passCheck, 10);
   if (emailCheck === "" || passCheck === "") {
     return response.status(404).send("Error: 404");
   }
@@ -81,7 +84,7 @@ app.post("/register", (request, response) => {
   if (userEmail) {
     return response.status(400).send("Error: 400");
   } 
-  users[generatedId] = { id: generatedId, email: request.body.email, password: request.body.password};
+  users[generatedId] = { id: generatedId, email: request.body.email, password: hashedPass};
   response.cookie('user_id', generatedId);
   response.redirect("/urls");
 });
@@ -117,10 +120,11 @@ app.post("/login", (request,response) => {
   const email = request.body.email;
   const password = request.body.password;
   const user = getUserByEmail(email);
+  const passValidation = bcrypt.compareSync(password, user.password)
   if (!user) {
     return response.status(403).send("Error: 403");
   };
-  if (password !== user.password) {
+  if (!passValidation ) {
     return response.status(403).send("Error: 403");
   };
   response.cookie('user_id', user.id);
