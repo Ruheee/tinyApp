@@ -1,12 +1,10 @@
-// const cookieParser = require('cookie-parser');
 const cookieSession = require('cookie-session');
 const express = require('express'); 
-const bcrypt = require("bcryptjs");
+const getUserByEmail = require('./helper');
 const app = express();
-
-const PORT = 8080; // default port is 8080
-
-app.set("view engine", "ejs");// tells the express app to use EJS as its templating engine
+const PORT = 8080; 
+const bcrypt = require("bcryptjs");
+app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true })); 
 app.use(cookieSession({
   name: 'session',
@@ -15,17 +13,6 @@ app.use(cookieSession({
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }))
-
-
-
-
-
-// const urlDatabase = {
-//   "b2xVn2": "http://www.lighthouselabs.ca",
-//   "9sm5xK": "http://www.google.com"
-  
-// };
-
 
 const urlDatabase = {
   b6UTxQ: {
@@ -61,14 +48,6 @@ function generateRandomString() {
   return result;
 };
 
-const getUserByEmail = (email, database) => {
-  for (const user in database) {
-    if(database[user].email === email) {
-      return database[user];
-    }
-  }
-  return null; 
-};
 
 const urlsForUser = (cookieID) => {
   const obj1 = {};
