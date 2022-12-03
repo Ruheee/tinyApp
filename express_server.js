@@ -1,18 +1,18 @@
 const cookieSession = require('cookie-session');
-const express = require('express'); 
+const express = require('express');
+const bcrypt = require("bcryptjs");
 const getUserByEmail = require('./helper');
 const app = express();
-const PORT = 8080; 
-const bcrypt = require("bcryptjs");
+const PORT = 8080;
 app.set("view engine", "ejs");
-app.use(express.urlencoded({ extended: true })); 
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieSession({
   name: 'session',
   keys: ['viva portugal'],
 
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
-}))
+}));
 
 const urlDatabase = {
   b6UTxQ: {
@@ -38,8 +38,7 @@ const users = {
     password: "dishwasher-funk",
   },
 };
-
-function generateRandomString() {
+const generateRandomString = () => {
   let characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   let result = '';
   for (let i = 0; i < 6; i++) {
@@ -74,9 +73,9 @@ app.post("/register", (request, response) => {
   const userEmail = getUserByEmail(emailCheck, dataUrlBase);
   if (userEmail) {
     return response.status(400).send("Error: 400");
-  } 
+  }
   users[generatedId] = { id: generatedId, email: request.body.email, password: hashedPass};
-  request.session.user_id = generatedId
+  request.session.user_id = generatedId;
   response.redirect("/urls");
 });
 
@@ -114,17 +113,17 @@ app.post("/login", (request,response) => {
   const user = getUserByEmail(email, dataUrlBase);
   if (!user) {
     return response.status(403).send("Error: 403");
-  };
+  }
   const passValidation = bcrypt.compareSync(password, user.password);
-  if (!passValidation ) {
+  if (!passValidation) {
     return response.status(403).send("Error: 403");
-  };
+  }
   request.session.user_id = user.id;
   // response.cookie('user_id', user.id);
   response.redirect("/urls");
 });
 
-// edit the exist long URL to something different 
+// edit the exist long URL to something different
 app.post("/urls/:shortURL", (request, response) => {
   const shortURL = request.params.shortURL;
   const userCookie = request.session['user_id'];
@@ -132,7 +131,7 @@ app.post("/urls/:shortURL", (request, response) => {
   if (userCookie === urlUserID) {
     urlDatabase[shortURL] = { longURL: request.body.longURL , userID: request.session.user_id };
   } else {
-    response.status(404).send("Need to be logged in order to delete")
+    response.status(404).send("Need to be logged in order to delete");
   }
   
   response.redirect("/urls");
@@ -144,9 +143,9 @@ app.post("/urls/:id/delete", (request, response) => {
   const userCookie = request.session['user_id'];
   const urlUserID = urlDatabase[request.params.id].userID;
   if (userCookie === urlUserID) {
-    delete urlDatabase[userInput]
+    delete urlDatabase[userInput];
   } else {
-    response.status(404).send("Need to be logged in order to delete")
+    response.status(404).send("Need to be logged in order to delete");
   }
   response.redirect("/urls");
 });
@@ -154,32 +153,30 @@ app.post("/urls/:id/delete", (request, response) => {
 // takes you to the website assigned to the 6 chatacter key
 app.get("/u/:id", (req, res) => {
   const id = req.params.id;
-  const longURL = urlDatabase[id].longURL;
   if (!urlDatabase[id]) {
-    res.send(`Error 404: ${id} not found`)
+    res.send(`Error 404: ${id} not found`);
   }
-  
-  
+  const longURL = urlDatabase[id].longURL;
   res.redirect(longURL);
 });
 
 //  generates a random 6 character key for new url inputted
 app.post("/urls", (request, response) => {
-  let id = generateRandomString()
+  let id = generateRandomString();
   urlDatabase[id] = { longURL: request.body.longURL, userID: request.session.user_id };
   const currentUser = users[request.session.user_id];
   if (!currentUser) {
     response.send('You need to be registered and/or logged in for you to have access to shortening urls');
-  };
-  response.redirect(`/urls/${id}`); 
+  }
+  response.redirect(`/urls/${id}`);
 });
 
-// routes to a page where you can input new urls 
+// routes to a page where you can input new urls
 app.get("/urls/new", (request, response) => {
   const currentUser = users[request.session.user_id];
   templateVars = { user: currentUser };
   if (!currentUser) {
-    response.redirect('/login')
+    response.redirect('/login');
   }
   response.render("urls_new", templateVars);
 });
@@ -188,12 +185,12 @@ app.get("/urls/new", (request, response) => {
 app.get('/urls/:id', (request, response) => {
   const currentUser = users[request.session.user_id];
   const userInput = request.params.id;
-  const templateVars = { id: request.params.id, longURL: urlDatabase[userInput].longURL, user: currentUser }; 
+  const templateVars = { id: request.params.id, longURL: urlDatabase[userInput].longURL, user: currentUser };
   const userCookie = request.session['user_id'];
   const urlUserID = urlDatabase[request.params.id].userID;
   if (!urlDatabase[userInput] || userCookie !== urlUserID) {
     response.send(`Error 404: ${userInput} not found`);
-  };
+  }
   response.render("urls_show", templateVars);
 });
 
@@ -205,8 +202,8 @@ app.get("/urls", (request, response) => {
   const templateVars = { urls: userIDChecker, user: currentUser };
   if (!currentUser) {
     response.send('You need to be registered and/or logged in for you to have access to shortening urls');
-  };
-  response.render("urls_index", templateVars );
+  }
+  response.render("urls_index", templateVars);
 });
 
 app.get("/", (request, response) => {
