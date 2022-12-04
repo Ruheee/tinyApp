@@ -22,15 +22,15 @@
     
     <% if(user === undefined) { %> 
       <form action="/register" method="GET">
-        <button>Register</button>
+        <button style="margin: 5px;" class="btn btn-primary">Register</button>
       </form>
       <form action="/login" method="GET">
-        <button>Log in</button>
+        <button class="btn btn-primary">Log in</button>
       </form>
     <% } else{ %>  
-      <p style="color: blue; font-size: 1.5em;"> Currently logged in as: <%= user.email %></p>
+      <p> Currently logged in as: <%= user.email %></p>
       <form action="/logout" method="POST">
-        <button type="submit">Sign out</button>
+        <button type="submit" style="margin: 5px;" class="btn btn-primary">Sign out</button>
       </form>
     <% } %>
   </nav>
